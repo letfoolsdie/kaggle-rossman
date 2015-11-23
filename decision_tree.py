@@ -24,7 +24,10 @@ print('Loading data...')
 
 df = pd.read_csv('train.csv')
 stores = pd.read_csv('store.csv')
+test = pd.read_csv('test.csv')
+
 df = pd.merge(df,stores,on='Store',how = 'left')
+test = pd.merge(test,stores,on='Store',how = 'left')
 df = df.loc[df.Sales>0]
 
 ##Changing categorical numbers to values:
@@ -32,19 +35,28 @@ converting = preprocessing.LabelEncoder()
 df['StateHoliday'] = converting.fit_transform(df.StateHoliday.astype(str))
 df['Assortment'] = converting.fit_transform(df.Assortment)
 df['StoreType'] = converting.fit_transform(df.StoreType)
+df['Date'] = pd.to_datetime(df.Date)
+df['Year'] = df.Date.dt.year
+df['Month'] = df.Date.dt.month
 
+test['StateHoliday'] = converting.fit_transform(test.StateHoliday.astype(str))
+test['Assortment'] = converting.fit_transform(test.Assortment)
+test['StoreType'] = converting.fit_transform(test.StoreType)
+test['Date'] = pd.to_datetime(test.Date)
+test['Year'] = test.Date.dt.year
+test['Month'] = test.Date.dt.month
 
 df['logSales'] = np.log1p(df.Sales.astype(int))
-#features = [col for col in df.columns if col not in ['Customers', 'Sales', 'Date','logSales','Promo2SinceWeek',
-#       'Promo2SinceYear', 'PromoInterval','CompetitionOpenSinceMonth','CompetitionOpenSinceYear','CompetitionDistance']]
-#df = df[df.Sales>0]
-#test = pd.read_csv('test.csv')
-features = ['Store', 'Open','DayOfWeek','Promo']
+features = [col for col in df.columns if col not in ['Customers', 'Sales', 'Date','logSales','Promo2SinceWeek',
+       'Promo2SinceYear', 'PromoInterval','CompetitionOpenSinceMonth','CompetitionOpenSinceYear','CompetitionDistance']]
+df = df[df.Sales>0]
+
+#features = ['Store', 'Open','DayOfWeek','Promo','Month','Year']
 #df = df[:len(df)]
-print('Splitting data in train and test datasets...')
+#print('Splitting data in train and test datasets...')
 train_results = []
 test_results = []
-repeat = 10
+repeat = 1
 ##FOR THESE FEATURES (av per 10 repetitions):
 #features = [col for col in df.columns if col not in ['Customers', 'Sales', 'Date','logSales','Promo2SinceWeek',
 
@@ -62,10 +74,10 @@ repeat = 10
 #Out[119]: 0.21589105266903053
 
 for i in range(repeat):
-    train, test = train_test_split(df, test_size = 0.2)
-    train = pd.DataFrame(train, columns = df.columns)
-    #train = df
-    test = pd.DataFrame(test, columns = df.columns)
+#    train, test = train_test_split(df, test_size = 0.2)
+#    train = pd.DataFrame(train, columns = df.columns)
+    train = df
+#    test = pd.DataFrame(test, columns = df.columns)
     
     #features = ['Store', 'Open','DayOfWeek','Promo']
     #df2 = df[cols]
@@ -86,8 +98,8 @@ for i in range(repeat):
     print('test set error',test_error)
     train_results.append(train_error)
     test_results.append(test_error)
-#test['Sales'] = test.pred_sales
-#test[[ 'Id', 'Sales' ]].to_csv('rand_for_v2-2.csv', index = False )
+test['Sales'] = test.pred_sales
+test[[ 'Id', 'Sales' ]].to_csv('rand_for_v3.csv', index = False )
 
 
 
