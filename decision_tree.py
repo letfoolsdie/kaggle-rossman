@@ -5,6 +5,9 @@ Created on Fri Nov 20 13:27:07 2015
 @author: Nikolay_Semyachkin
 """
 
+##THIS VERSION GIVES 0.13018 on Kaggle public leaderboard
+
+
 import pandas as pd
 import numpy as np
 from sklearn.cross_validation import train_test_split
@@ -26,6 +29,10 @@ df = pd.read_csv('train.csv')
 stores = pd.read_csv('store.csv')
 test = pd.read_csv('test.csv')
 
+#stores.loc[stores.CompetitionDistance.isnull(),'CompetitionDistance'] = \
+#np.median(stores.loc[stores.CompetitionDistance.isnull() == False].CompetitionDistance) #Fill empty CompetitionDistance with median
+
+
 df = pd.merge(df,stores,on='Store',how = 'left')
 test = pd.merge(test,stores,on='Store',how = 'left')
 df = df.loc[df.Sales>0]
@@ -39,6 +46,7 @@ df['Date'] = pd.to_datetime(df.Date)
 df['Year'] = df.Date.dt.year
 df['Month'] = df.Date.dt.month
 
+
 test['StateHoliday'] = converting.fit_transform(test.StateHoliday.astype(str))
 test['Assortment'] = converting.fit_transform(test.Assortment)
 test['StoreType'] = converting.fit_transform(test.StoreType)
@@ -47,13 +55,16 @@ test['Year'] = test.Date.dt.year
 test['Month'] = test.Date.dt.month
 
 df['logSales'] = np.log1p(df.Sales.astype(int))
-features = [col for col in df.columns if col not in ['Customers', 'Sales', 'Date','logSales','Promo2SinceWeek',
-       'Promo2SinceYear', 'PromoInterval','CompetitionOpenSinceMonth','CompetitionOpenSinceYear','CompetitionDistance']]
+#features = [col for col in df.columns if col not in ['Customers', 'Sales', 'Date','logSales','Promo2SinceWeek',
+#       'Promo2SinceYear', 'PromoInterval','CompetitionOpenSinceMonth','CompetitionOpenSinceYear']]
+#features = [col for col in df.columns if col not in ['Customers', 'Sales', 'Date','logSales','PromoInterval']]
+features = [col for col in df.columns if col not in ['Customers', 'Sales', 'Date','logSales','Promo2SinceWeek', \
+'Promo2SinceYear', 'PromoInterval','CompetitionOpenSinceMonth','CompetitionOpenSinceYear','CompetitionDistance']]
 df = df[df.Sales>0]
-
+#df = df.fillna(-1)
 #features = ['Store', 'Open','DayOfWeek','Promo','Month','Year']
 #df = df[:len(df)]
-#print('Splitting data in train and test datasets...')
+print('Splitting data in train and test datasets...')
 train_results = []
 test_results = []
 repeat = 1
@@ -76,10 +87,11 @@ repeat = 1
 for i in range(repeat):
 #    train, test = train_test_split(df, test_size = 0.2)
 #    train = pd.DataFrame(train, columns = df.columns)
+#    print('In the loop')
     train = df
 #    test = pd.DataFrame(test, columns = df.columns)
     
-    #features = ['Store', 'Open','DayOfWeek','Promo']
+#    features = ['Store', 'Open','DayOfWeek','Promo','Month','Year']
     #df2 = df[cols]
     
     print('Starting training...')
@@ -92,14 +104,16 @@ for i in range(repeat):
     train_error = rmspe(train[train.Sales>0].Sales,train[train.Sales>0].pred_sales)
     print('train set error',train_error)
     test.loc[test.Open.isnull(), 'Open'] = 1
+#    test = test.fillna(-1)
     test['pred_sales'] = clf.predict(test[features])
     test['pred_sales'] = np.expm1(test.pred_sales)
-    test_error = rmspe(test[test.Sales>0].Sales,test[test.Sales>0].pred_sales)
-    print('test set error',test_error)
-    train_results.append(train_error)
-    test_results.append(test_error)
+#    test_error = rmspe(test[test.Sales>0].Sales,test[test.Sales>0].pred_sales)
+#    print('test set error',test_error)
+#    train_results.append(train_error)
+#    test_results.append(test_error)
 test['Sales'] = test.pred_sales
-test[[ 'Id', 'Sales' ]].to_csv('rand_for_v3.csv', index = False )
-
+test[[ 'Id', 'Sales' ]].to_csv('rand_for_v3-0-3.csv', index = False )
+#print('mean train error', np.mean(train_results))
+#print('mean test error',np.mean(test_results))
 
 
