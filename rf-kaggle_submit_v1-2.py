@@ -4,9 +4,9 @@ Created on Wed Nov 25 09:24:46 2015
 
 @author: Nikolay_Semyachkin
 """
-###THIS SUBMISSION GIVES 0.12251 ON PUBLIC LEADERBOARD
-##In version 1-2: change dummy variables to simply different numbers in one columns
-##Your submission scored 0.12364
+###THIS SUBMISSION GIVES 0.12251 ON PUBLIC LEADERBOARD <- about version 1
+##In version 1-2: change dummy variables to simply different numbers in one columns:Your submission scored 0.12364
+##Train on Sales>0, replace NaN with -1 instead of 0 : Your submission scored 0.12259
 
 import pandas as pd
 import numpy as np  
@@ -53,7 +53,7 @@ def processdata(data):
     data.loc[data['PromoInterval'] == 'Mar,Jun,Sept,Dec', 'PromoInterval'] = '3'
     data['PromoInterval'] = data['PromoInterval'].astype(float)
     
-    data.fillna(0, inplace=True)
+    data.fillna(-1, inplace=True)
     
 print('Loading data...')
 train = pd.read_csv('train.csv')
@@ -61,6 +61,9 @@ test = pd.read_csv('test.csv')
 store = pd.read_csv('store.csv')
 
 print('Doing some preprocessing...')
+
+train = train[train.Sales > 0] #for features taken from xgb model on Kaggle, training is based on Open==1 rows; 'Open'
+#is removed from features
 
 train['LogSale'] = np.log(train.Sales+1)
 
@@ -74,20 +77,20 @@ processdata(test)
 repeat = 1
 #print('Splitting data...')
 for i in range(repeat):
-    features = [col for col in test.columns if col not in ['Customers', 'Sales', 'Date','LogSale','datetimes','Id']]
+    features = [col for col in test.columns if col not in ['Customers', 'Sales', 'Date','LogSale','datetimes','Id']] ##!!!for submission should be test.columns!!!
+#    features = ['Store', 'CompetitionDistance', 'CompetitionOpenSinceMonth', 'CompetitionOpenSinceYear', 'Promo', 'Promo2',\
+# 'Promo2SinceWeek', 'Promo2SinceYear', 'SchoolHoliday', 'DayOfWeek', 'mon', 'day', 'year', 'StoreType', 'Assortment']
+ # ^^ features taken from xgb model on Kaggle
     rf = RandomForestRegressor(n_estimators=100)
     print('Starting training...')
     rf.fit(train[features],train.LogSale)
-    train['mypred'] = rf.predict(train[features])
-    train['mypred'] = np.expm1(train.mypred)
-    train_error = rmspe(train[train.Sales>0].Sales,train[train.Sales>0].mypred)
-    
-#    
+#    train['mypred'] = rf.predict(train[features])
+#    train['mypred'] = np.expm1(train.mypred)
+#    train_error = rmspe(train[train.Sales>0].Sales,train[train.Sales>0].mypred)
+#    print(train_error)
+ 
     test['mypred'] = rf.predict(test[features])
     test['mypred'] = np.exp(test['mypred'])-1
-#
+
 test['Sales'] = test.mypred
-test[[ 'Id', 'Sales' ]].to_csv('rand_for_kag_v4-7_not_dummy.csv', index = False )
-
-
-
+test[[ 'Id', 'Sales' ]].to_csv('rand_for_kag_v4-8.csv', index = False )
