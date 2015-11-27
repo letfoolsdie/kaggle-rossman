@@ -5,7 +5,7 @@ Created on Wed Nov 25 09:24:46 2015
 @author: Nikolay_Semyachkin
 """
 ###THIS SUBMISSION GIVES 0.12251 ON PUBLIC LEADERBOARD
-
+##added line to train only on Sales > 0 dataset : BAD idea - Your submission scored 0.14710
 import pandas as pd
 import numpy as np  
 import matplotlib.dates 
@@ -42,6 +42,8 @@ print('Loading data...')
 train = pd.read_csv('train.csv')
 test = pd.read_csv('test.csv')
 store = pd.read_csv('store.csv')
+
+#train = train[train.Sales > 0]
 
 print('Doing some preprocessing...')
 
@@ -82,6 +84,6 @@ for i in range(repeat):
     test['mypred'] = np.exp(test['mypred'])-1
 
 test['Sales'] = test.mypred
-test[[ 'Id', 'Sales' ]].to_csv('rand_for_kag_v4-5_confirm.csv', index = False )
+test[[ 'Id', 'Sales' ]].to_csv('rand_for_kag_v4-9.csv', index = False )
 
 
